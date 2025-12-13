@@ -1,0 +1,7 @@
+streamlit
+geopandas
+pydeck
+pandas
+numpy
+shapely
+h3
