@@ -1,0 +1,18 @@
+# ESRI Geodatabase files
+a0*.gdbtable
+a0*.gdbtablx
+a0*.gdbindexes
+a0*.atx
+a0*.freelist
+a0*.spx
+a0*.horizon
+*Zone.Identifier
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+
+# Streamlit
+.streamlit/
