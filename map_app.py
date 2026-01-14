@@ -182,6 +182,10 @@ tooltip = {
 }
 
 st.title("Texas Building Metrics Explorer")
+st.markdown(
+    "<p style='text-align: right; color: #999; font-size: 10px; margin-top: -15px;'>By Grace Scarborough | © 2026</p>",
+    unsafe_allow_html=True
+)
 st.markdown(f"**Currently displaying:** {metric}")
 
 r = pdk.Deck(
