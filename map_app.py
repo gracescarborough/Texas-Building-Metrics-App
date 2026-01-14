@@ -183,11 +183,7 @@ tooltip = {
 
 st.title("Texas Building Metrics Explorer")
 st.markdown(
-<<<<<<< Updated upstream
     "<p style='text-align: right; color: #999; font-size: 11px; margin-top: -15px;'>By Grace Scarborough | © 2026</p>",
-=======
-    "<p style='text-align: right; color: #999; font-size: 10px; margin-top: -15px;'>By Grace Scarborough | © 2026</p>",
->>>>>>> Stashed changes
     unsafe_allow_html=True
 )
 st.markdown(f"**Currently displaying:** {metric}")
