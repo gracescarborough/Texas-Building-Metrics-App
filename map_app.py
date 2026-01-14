@@ -8,8 +8,8 @@ import h3
 
 st.set_page_config(layout="wide", page_title="Texas Building Metrics")
 
-GRID_PATH = "tx_grid_classified_embodied.shp"
-CENTROIDS_PATH = "sample_centroids_with_stats_and_class_embodied.shp"
+GRID_PATH = "FloodFiles/tx_grid_classified_embodied.shp"
+CENTROIDS_PATH = "FloodFiles/sample_centroids_with_stats_and_class_embodied.shp"
 
 @st.cache_data
 def load_and_process_data():
