@@ -43,7 +43,7 @@ metric = st.sidebar.selectbox(
 )
 
 hex_size_option = st.sidebar.slider("Hexagon Size", 1, 3, 2)
-hex_size_map = {1: 8, 2: 7, 3: 6}
+hex_size_map = {1: 7, 2: 6, 3: 5}
 h3_resolution = hex_size_map[hex_size_option]
 
 enable_3d = st.sidebar.checkbox("Enable 3D View", value=False)
@@ -183,11 +183,7 @@ tooltip = {
 
 st.title("Texas Building Metrics Explorer")
 st.markdown(
-<<<<<<< Updated upstream
     "<p style='text-align: right; color: #999; font-size: 11px; margin-top: -15px;'>By Grace Scarborough | © 2026</p>",
-=======
-    "<p style='text-align: right; color: #999; font-size: 10px; margin-top: -15px;'>By Grace Scarborough | © 2026</p>",
->>>>>>> Stashed changes
     unsafe_allow_html=True
 )
 st.markdown(f"**Currently displaying:** {metric}")
