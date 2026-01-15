@@ -5,14 +5,16 @@ import pandas as pd
 import numpy as np
 from shapely.geometry import Point
 import h3
+import os
 
 st.set_page_config(layout="wide", page_title="Texas Building Metrics")
 
 GRID_PATH = "FloodFiles/tx_grid_classified.shp"
 CENTROIDS_PATH = "FloodFiles/sample_centroids_with_density.shp"
 
-@st.cache_data
-def load_and_process_data():
+@st.cache_data(show_spinner=False)
+def load_and_process_data(_filehash=None):
+
     """Load data and downsample if needed"""
     grid = gpd.read_file(GRID_PATH).to_crs("EPSG:4326")
     centroids = gpd.read_file(CENTROIDS_PATH).to_crs("EPSG:4326")
@@ -35,7 +37,8 @@ def load_and_process_data():
 
 try:
     with st.spinner("Loading data..."):
-        grid, centroids = load_and_process_data()
+        filehash = os.path.getmtime(GRID_PATH)
+        grid, centroids = load_and_process_data(filehash)
 except Exception as e:
     st.error(f"Error loading data: {e}")
     st.stop()
