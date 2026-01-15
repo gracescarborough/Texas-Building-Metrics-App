@@ -18,7 +18,13 @@ def load_and_process_data():
     centroids = gpd.read_file(CENTROIDS_PATH).to_crs("EPSG:4326")
     
     if len(grid) > 50000:
-        grid_sampled = grid.sample(n=50000, random_state=42)
+        high_density = grid[grid['density'] > 0.05]
+        low_density = grid[grid['density'] <= 0.05]
+        
+        n_sample = min(50000 - len(high_density), len(low_density))
+        low_density_sampled = low_density.sample(n=n_sample, random_state=42)
+        
+        grid_sampled = pd.concat([high_density, low_density_sampled])
     else:
         grid_sampled = grid
     
