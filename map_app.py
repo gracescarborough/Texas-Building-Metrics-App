@@ -43,7 +43,7 @@ metric = st.sidebar.selectbox(
 )
 
 hex_size_option = st.sidebar.slider("Hexagon Size", 1, 3, 2)
-hex_size_map = {1: 7, 2: 6, 3: 5}
+hex_size_map = {1: 9, 2: 8, 3: 7}
 h3_resolution = hex_size_map[hex_size_option]
 
 enable_3d = st.sidebar.checkbox("Enable 3D View", value=False)
