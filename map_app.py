@@ -177,10 +177,15 @@ view_state = pdk.ViewState(
     bearing=0
 )
 
+if column_name == "density":
+    value_label = "Building density"
+else:
+    value_label = "Avg " + metric
+
 tooltip = {
     "html": "<b>Hexagon Data</b><br/>"
             "Grid points: {point_count}<br/>"
-            "Avg " + metric + ": {display_value}",
+            f"{value_label}: {{display_value}}",
     "style": {
         "backgroundColor": "steelblue",
         "color": "white",
