@@ -109,6 +109,14 @@ def aggregate_to_h3(_grid_df, column_name, resolution):
 with st.spinner("Aggregating hexagons..."):
     hex_data = aggregate_to_h3(grid, column_name, h3_resolution)
 
+st.sidebar.markdown("---")
+st.sidebar.subheader("Debug Info")
+st.sidebar.write(f"Grid points loaded: {len(grid)}")
+st.sidebar.write(f"Grid max density: {grid['density'].max():.4f}")
+st.sidebar.write(f"Hexagons created: {len(hex_data)}")
+st.sidebar.write(f"Hex max avg_value: {hex_data['avg_value'].max():.4f}")
+st.sidebar.write(f"H3 resolution: {h3_resolution}")
+
 vmin, vmax = hex_data['avg_value'].min(), hex_data['avg_value'].max()
 vmean = hex_data['avg_value'].mean()
 
