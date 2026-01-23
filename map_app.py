@@ -16,8 +16,13 @@ CENTROIDS_PATH = "FloodFiles/sample_centroids_with_density.shp"
 def load_and_process_data(_filehash=None):
 
     """Load data and downsample if needed"""
-    grid = gpd.read_file(GRID_PATH).to_crs("EPSG:4326")
-    centroids = gpd.read_file(CENTROIDS_PATH).to_crs("EPSG:4326")
+    grid = gpd.read_file(
+        "FloodFiles/tx_grid_classified.gpkg"
+    )
+
+    centroids = gpd.read_file(
+        "FloodFiles/sample_centroids_with_stats.gpkg"
+    )
     
     if len(grid) > 50000:
         high_density = grid[grid['density'] > 0.05]
