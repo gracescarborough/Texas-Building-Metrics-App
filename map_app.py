@@ -13,30 +13,38 @@ GRID_PATH = "tx_grid_classified.shp"
 CENTROIDS_PATH = "FloodFiles/sample_centroids_with_density.shp"
 
 @st.cache_data(show_spinner=False)
-def load_and_process_data(_filehash=None):
-
-    """Load data and downsample if needed"""
-    grid = gpd.read_file(
-        "FloodFiles/tx_grid_classified.gpkg"
-    )
-
-    centroids = gpd.read_file(
-        "FloodFiles/sample_centroids_with_stats.gpkg"
-    )
+def load_and_process_data(_filehash=None, max_points=50000):
+    """
+    Load grid and centroid data for Streamlit.
+    Ensures all high-density points are preserved to retain true max values.
+    
+    Args:
+        _filehash: file modification timestamp for caching
+        max_points: maximum number of points to display (for performance)
+    
+    Returns:
+        grid_sampled: GeoDataFrame ready for H3 aggregation
+        centroids: GeoDataFrame of centroids
+    """
+    grid = gpd.read_file(GRID_PATH)
+    centroids = gpd.read_file(CENTROIDS_PATH)
     
     grid = grid.to_crs(epsg=4326)
     centroids = centroids.to_crs(epsg=4326)
-
-    if len(grid) > 50000:
-        high_density = grid[grid['density'] > 0.05]
-        low_density = grid[grid['density'] <= 0.05]
-        
-        n_sample = min(50000 - len(high_density), len(low_density))
-        low_density_sampled = low_density.sample(n=n_sample, random_state=42)
-        
-        grid_sampled = pd.concat([high_density, low_density_sampled])
+    
+    high_density_threshold = max(grid['density'].max() * 0.1, 0.05)
+    high_density = grid[grid['density'] >= high_density_threshold]
+    low_density = grid[grid['density'] < high_density_threshold]
+    
+    n_high = len(high_density)
+    n_low_sample = max(0, max_points - n_high)
+    
+    if len(low_density) > n_low_sample:
+        low_density_sampled = low_density.sample(n=n_low_sample, random_state=42)
     else:
-        grid_sampled = grid
+        low_density_sampled = low_density
+    
+    grid_sampled = pd.concat([high_density, low_density_sampled])
     
     grid_sampled['lon'] = grid_sampled.geometry.x
     grid_sampled['lat'] = grid_sampled.geometry.y
