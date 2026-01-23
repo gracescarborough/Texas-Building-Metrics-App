@@ -222,5 +222,3 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("Statistics")
 st.sidebar.metric("Min Value", f"{vmin:.4f}")
 st.sidebar.metric("Max Value", f"{vmax:.4f}")
-
-st.write(grid.columns)
