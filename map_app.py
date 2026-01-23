@@ -31,6 +31,7 @@ def load_and_process_data(_filehash=None, max_points=50000):
     
     grid = grid.to_crs(epsg=4326)
     centroids = centroids.to_crs(epsg=4326)
+    print(grid.columns.tolist())
     
     high_density_threshold = max(grid['density'].max() * 0.1, 0.05)
     high_density = grid[grid['density'] >= high_density_threshold]
