@@ -24,6 +24,11 @@ def load_and_process_data(_filehash=None):
         "FloodFiles/sample_centroids_with_stats.gpkg"
     )
     
+    st.write("Grid rows:", len(grid))
+    st.write("Centroid rows:", len(centroids))
+    st.write("Grid CRS:", grid.crs)
+    st.write("Centroid CRS:", centroids.crs)
+
     if len(grid) > 50000:
         high_density = grid[grid['density'] > 0.05]
         low_density = grid[grid['density'] <= 0.05]
