@@ -1,53 +1,52 @@
-import os
 import geopandas as gpd
 import streamlit as st
+import pydeck as pdk
+import pandas as pd
+import numpy as np
+from shapely.geometry import Point
+import h3
+import os
 
-# Get the folder where this script lives
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Build absolute paths to your data
-GRID_PATH = os.path.join(BASE_DIR, "FloodFiles", "tx_grid_classified.gpkg")
-CENTROIDS_PATH = os.path.join(BASE_DIR, "FloodFiles", "sample_centroids_with_stats.gpkg")
+st.set_page_config(layout="wide", page_title="Texas Building Metrics")
 
-st.write("Grid path:", GRID_PATH)
-st.write("Centroids path:", CENTROIDS_PATH)
+
+GRID_PATH = "FloodFiles/tx_grid_classified.shp"
+CENTROIDS_PATH = "FloodFiles/sample_centroids_with_density.shp"
+
 
 @st.cache_data(show_spinner=False)
-def load_and_process_data(_filehash=None, max_points=50000):
-    try:
-        grid = gpd.read_file(GRID_PATH)
-        centroids = gpd.read_file(CENTROIDS_PATH)
-    except Exception as e:
-        st.error(f"Error reading files: {e}")
-        st.stop()
+def load_and_process_data(_filehash=None):
 
-    # Reproject to WGS84 for mapping
-    grid = grid.to_crs(epsg=4326)
-    centroids = centroids.to_crs(epsg=4326)
 
-    # Downsample grid for performance
-    high_density_threshold = max(grid['density'].max() * 0.1, 0.05)
-    high_density = grid[grid['density'] >= high_density_threshold]
-    low_density = grid[grid['density'] < high_density_threshold]
-    n_high = len(high_density)
-    n_low_sample = max(0, max_points - n_high)
-    low_density_sampled = low_density.sample(n=n_low_sample, random_state=42) if len(low_density) > n_low_sample else low_density
-    grid_sampled = pd.concat([high_density, low_density_sampled])
-
+    """Load data and downsample if needed"""
+    grid = gpd.read_file(GRID_PATH).to_crs("EPSG:4326")
+    centroids = gpd.read_file(CENTROIDS_PATH).to_crs("EPSG:4326")
+   
+    if len(grid) > 50000:
+        high_density = grid[grid['density'] > 0.05]
+        low_density = grid[grid['density'] <= 0.05]
+       
+        n_sample = min(50000 - len(high_density), len(low_density))
+        low_density_sampled = low_density.sample(n=n_sample, random_state=42)
+       
+        grid_sampled = pd.concat([high_density, low_density_sampled])
+    else:
+        grid_sampled = grid
+   
     grid_sampled['lon'] = grid_sampled.geometry.x
     grid_sampled['lat'] = grid_sampled.geometry.y
-
+   
     return grid_sampled, centroids
 
-# Compute filehash for caching
-filehash = (
-    os.path.getmtime(GRID_PATH),
-    os.path.getmtime(CENTROIDS_PATH)
-)
 
-# Load data
-with st.spinner("Loading data..."):
-    grid, centroids = load_and_process_data(filehash)
+try:
+    with st.spinner("Loading data..."):
+        filehash = os.path.getmtime(GRID_PATH)
+        grid, centroids = load_and_process_data(filehash)
+except Exception as e:
+    st.error(f"Error loading data: {e}")
+    st.stop()
 
 st.sidebar.title("Map Controls")
 
