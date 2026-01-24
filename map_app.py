@@ -53,7 +53,10 @@ def load_and_process_data(_filehash=None, max_points=50000):
 
 try:
     with st.spinner("Loading data..."):
-        filehash = os.path.getmtime(GRID_PATH)
+    filehash = (
+        os.path.getmtime(GRID_PATH),
+        os.path.getmtime(CENTROIDS_PATH)
+    )
         grid, centroids = load_and_process_data(filehash)
 except Exception as e:
     st.error(f"Error loading data: {e}")
@@ -229,3 +232,7 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("Statistics")
 st.sidebar.metric("Min Value", f"{vmin:.4f}")
 st.sidebar.metric("Max Value", f"{vmax:.4f}")
+
+st.write("Runtime density stats:")
+st.write(grid["density"].describe())
+st.write("Runtime max density:", grid["density"].max())
