@@ -8,7 +8,6 @@ import h3
 import os
 
 st.set_page_config(layout="wide", page_title="Texas Building Metrics")
-st.cache_data.clear()
 
 GRID_PATH = "FloodFiles/tx_grid_classified.gpkg"
 CENTROIDS_PATH = "FloodFiles/sample_centroids_with_stats.gpkg"
