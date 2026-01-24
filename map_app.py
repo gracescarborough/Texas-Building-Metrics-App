@@ -53,10 +53,10 @@ def load_and_process_data(_filehash=None, max_points=50000):
 
 try:
     with st.spinner("Loading data..."):
-    filehash = (
-        os.path.getmtime(GRID_PATH),
-        os.path.getmtime(CENTROIDS_PATH)
-    )
+        filehash = (
+            os.path.getmtime(GRID_PATH),
+            os.path.getmtime(CENTROIDS_PATH)
+        )
         grid, centroids = load_and_process_data(filehash)
 except Exception as e:
     st.error(f"Error loading data: {e}")
