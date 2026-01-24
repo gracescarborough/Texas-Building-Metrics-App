@@ -9,8 +9,8 @@ import os
 
 st.set_page_config(layout="wide", page_title="Texas Building Metrics")
 
-GRID_PATH = "tx_grid_classified.shp"
-CENTROIDS_PATH = "FloodFiles/sample_centroids_with_density.shp"
+GRID_PATH = "FloodFiles/tx_grid_classified.gpkg"
+CENTROIDS_PATH = "FloodFiles/sample_centroids_with_stats.gpkg"
 
 @st.cache_data(show_spinner=False)
 def load_and_process_data(_filehash=None, max_points=50000):
