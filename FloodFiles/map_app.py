@@ -1,38 +1,53 @@
+import os
 import geopandas as gpd
 import streamlit as st
-import pydeck as pdk
-import pandas as pd
-import numpy as np
-from shapely.geometry import Point
-import h3
 
-st.set_page_config(layout="wide", page_title="Texas Building Metrics")
+# Get the folder where this script lives
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-GRID_PATH = "tx_grid_classified_embodied.shp"
-CENTROIDS_PATH = "sample_centroids_with_stats_and_class_embodied.shp"
+# Build absolute paths to your data
+GRID_PATH = os.path.join(BASE_DIR, "FloodFiles", "tx_grid_classified.gpkg")
+CENTROIDS_PATH = os.path.join(BASE_DIR, "FloodFiles", "sample_centroids_with_stats.gpkg")
 
-@st.cache_data
-def load_and_process_data():
-    """Load data and downsample if needed"""
-    grid = gpd.read_file(GRID_PATH).to_crs("EPSG:4326")
-    centroids = gpd.read_file(CENTROIDS_PATH).to_crs("EPSG:4326")
-    
-    if len(grid) > 50000:
-        grid_sampled = grid.sample(n=50000, random_state=42)
-    else:
-        grid_sampled = grid
-    
+st.write("Grid path:", GRID_PATH)
+st.write("Centroids path:", CENTROIDS_PATH)
+
+@st.cache_data(show_spinner=False)
+def load_and_process_data(_filehash=None, max_points=50000):
+    try:
+        grid = gpd.read_file(GRID_PATH)
+        centroids = gpd.read_file(CENTROIDS_PATH)
+    except Exception as e:
+        st.error(f"Error reading files: {e}")
+        st.stop()
+
+    # Reproject to WGS84 for mapping
+    grid = grid.to_crs(epsg=4326)
+    centroids = centroids.to_crs(epsg=4326)
+
+    # Downsample grid for performance
+    high_density_threshold = max(grid['density'].max() * 0.1, 0.05)
+    high_density = grid[grid['density'] >= high_density_threshold]
+    low_density = grid[grid['density'] < high_density_threshold]
+    n_high = len(high_density)
+    n_low_sample = max(0, max_points - n_high)
+    low_density_sampled = low_density.sample(n=n_low_sample, random_state=42) if len(low_density) > n_low_sample else low_density
+    grid_sampled = pd.concat([high_density, low_density_sampled])
+
     grid_sampled['lon'] = grid_sampled.geometry.x
     grid_sampled['lat'] = grid_sampled.geometry.y
-    
+
     return grid_sampled, centroids
 
-try:
-    with st.spinner("Loading data..."):
-        grid, centroids = load_and_process_data()
-except Exception as e:
-    st.error(f"Error loading data: {e}")
-    st.stop()
+# Compute filehash for caching
+filehash = (
+    os.path.getmtime(GRID_PATH),
+    os.path.getmtime(CENTROIDS_PATH)
+)
+
+# Load data
+with st.spinner("Loading data..."):
+    grid, centroids = load_and_process_data(filehash)
 
 st.sidebar.title("Map Controls")
 
@@ -86,7 +101,7 @@ def aggregate_to_h3(_grid_df, column_name, resolution):
     )
     
     hex_agg = grid_clean.groupby('h3').agg({
-        column_name: 'mean',
+        column_name: 'max',
         'lon': 'count'
     }).reset_index()
     
@@ -108,7 +123,6 @@ def aggregate_to_h3(_grid_df, column_name, resolution):
 
 with st.spinner("Aggregating hexagons..."):
     hex_data = aggregate_to_h3(grid, column_name, h3_resolution)
-
 vmin, vmax = hex_data['avg_value'].min(), hex_data['avg_value'].max()
 vmean = hex_data['avg_value'].mean()
 
@@ -169,10 +183,14 @@ view_state = pdk.ViewState(
     bearing=0
 )
 
+if column_name == "density":
+    value_label = "Building density"
+else:
+    value_label = "Avg " + metric
+
 tooltip = {
     "html": "<b>Hexagon Data</b><br/>"
-            "Grid points: {point_count}<br/>"
-            "Avg " + metric + ": {display_value}",
+            f"{value_label}: {{display_value}}",
     "style": {
         "backgroundColor": "steelblue",
         "color": "white",
@@ -201,3 +219,7 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("Statistics")
 st.sidebar.metric("Min Value", f"{vmin:.4f}")
 st.sidebar.metric("Max Value", f"{vmax:.4f}")
+
+st.write("Runtime density stats:")
+st.write(grid["density"].describe())
+st.write("Runtime max density:", grid["density"].max())
