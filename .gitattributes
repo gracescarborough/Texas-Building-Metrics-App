@@ -8,3 +8,5 @@ FloodFiles/*.shp filter=lfs diff=lfs merge=lfs -text
 FloodFiles/*.shx filter=lfs diff=lfs merge=lfs -text
 FloodFiles/*.dbf filter=lfs diff=lfs merge=lfs -text
 FloodFiles/*.prj filter=lfs diff=lfs merge=lfs -text
+FloodFiles/sample_centroids_with_stats.prj filter=lfs diff=lfs merge=lfs -text
+FloodFiles/sample_centroids_with_stats.cpg filter=lfs diff=lfs merge=lfs -text
