@@ -1,5 +1,6 @@
 import geopandas as gpd
 import streamlit as st
+st.cache_data.clear()
 import pydeck as pdk
 import pandas as pd
 import numpy as np
@@ -12,7 +13,7 @@ st.set_page_config(layout="wide", page_title="Texas Building Metrics")
 
 
 GRID_PATH = "tx_grid_classified.shp"
-CENTROIDS_PATH = "sample_centroids_with_density.shp"
+CENTROIDS_PATH = "sample_centroids_with_stats.shp"
 
 
 @st.cache_data(show_spinner=False)
