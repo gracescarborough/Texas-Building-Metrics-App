@@ -11,6 +11,10 @@ import os
 st.set_page_config(layout="wide", page_title="Texas Building Metrics")
 
 BASE_DIR = Path(__file__).parent
+st.write("Current working directory:", os.getcwd())
+st.write("BASE_DIR:", BASE_DIR)
+st.write("Contents of BASE_DIR:", os.listdir(BASE_DIR))
+st.write("Contents of FloodFiles:", os.listdir(BASE_DIR / "FloodFiles"))
 GRID_PATH = BASE_DIR / "FloodFiles" / "tx_grid_classified.shp"
 CENTROIDS_PATH = BASE_DIR / "FloodFiles" / "sample_centroids_with_stats.shp"
 
