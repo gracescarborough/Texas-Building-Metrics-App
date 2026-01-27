@@ -4,16 +4,16 @@ import pydeck as pdk
 import pandas as pd
 import numpy as np
 from shapely.geometry import Point
+from pathlib import Path
 import h3
 import os
 
 
 st.set_page_config(layout="wide", page_title="Texas Building Metrics")
 
-
-GRID_PATH = "tx_grid_classified.gpkg"
-CENTROIDS_PATH = "sample_centroids_with_stats.gpkg"
-
+BASE_DIR = Path(__file__).parent
+GRID_PATH = BASE_DIR / "tx_grid_classified.gpkg"
+CENTROIDS_PATH = BASE_DIR / "sample_centroids_with_stats.gpkg"
 
 @st.cache_data(show_spinner=False)
 def load_and_process_data(_filehash=None):
