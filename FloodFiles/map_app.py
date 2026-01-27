@@ -12,8 +12,8 @@ import os
 st.set_page_config(layout="wide", page_title="Texas Building Metrics")
 
 
-GRID_PATH = "tx_grid_classified.shp"
-CENTROIDS_PATH = "sample_centroids_with_stats.shp"
+GRID_PATH = "tx_grid_classified.gpkg"
+CENTROIDS_PATH = "sample_centroids_with_stats.gpkg"
 
 
 @st.cache_data(show_spinner=False)
