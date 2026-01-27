@@ -1,7 +1,9 @@
 streamlit
 geopandas
+pydeck
 pandas
 numpy
 shapely
+pyproj
+fiona
 h3
-plotly
