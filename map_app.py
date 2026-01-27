@@ -7,16 +7,11 @@ from shapely.geometry import Point
 from pathlib import Path
 import h3
 import os
-st.write("Current working directory:", os.getcwd())
-st.write("Files here:", os.listdir("."))
-st.write("Files in FloodFiles:", os.listdir("FloodFiles") if os.path.exists("FloodFiles") else "FloodFiles missing")
-
 
 st.set_page_config(layout="wide", page_title="Texas Building Metrics")
 
-BASE_DIR = Path(__file__).parent
-GRID_PATH = BASE_DIR / "FloodFiles" / "tx_grid_classified.shp"
-CENTROIDS_PATH = BASE_DIR / "FloodFiles" / "sample_centroids_with_stats.shp"
+GRID_PATH = "FloodFiles/tx_grid_classified.shp"
+CENTROIDS_PATH = "FloodFiles/sample_centroids_with_stats.shp"
 
 @st.cache_data(show_spinner=False)
 def load_and_process_data(_filehash=None):
