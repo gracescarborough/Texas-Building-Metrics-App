@@ -7,6 +7,10 @@ from shapely.geometry import Point
 from pathlib import Path
 import h3
 import os
+st.write("Current working directory:", os.getcwd())
+st.write("Files here:", os.listdir("."))
+st.write("Files in FloodFiles:", os.listdir("FloodFiles") if os.path.exists("FloodFiles") else "FloodFiles missing")
+
 
 st.set_page_config(layout="wide", page_title="Texas Building Metrics")
 
