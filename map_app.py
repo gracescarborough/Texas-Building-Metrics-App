@@ -228,10 +228,6 @@ if page == "Main Map":
     st.sidebar.metric("Min Value", f"{vmin:.4f}")
     st.sidebar.metric("Max Value", f"{vmax:.4f}")
 
-    st.write("Runtime density stats:")
-    st.write(grid["density"].describe())
-    st.write("Runtime max density:", grid["density"].max())
-
 elif page == "About":
     st.title("About This App")
     st.markdown("""
