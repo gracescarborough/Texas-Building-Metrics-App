@@ -35,16 +35,16 @@ def estimate_floors(btype, footprint_area_m2):
     """
 
     if btype == "Residential":
-        floors = 0.146 * np.exp(0.0023 * footprint_area_m2)
+        floors = 1.1145 * np.exp(0.000257 * footprint_area_m2)
 
     elif btype == "Commercial":
-        floors = 0.4536 * np.exp(0.0023 * footprint_area_m2)
+        floors = 1.1808 * np.exp(0.00004 * footprint_area_m2)
 
     elif btype == "Industrial":
         floors = 1
 
     elif btype == "Institutional":
-        floors = 0.4536 * np.exp(0.0023 * footprint_area_m2)
+        floors = 1.1808 * np.exp(0.00004 * footprint_area_m2)
 
     else:  # Other
         floors = 1
