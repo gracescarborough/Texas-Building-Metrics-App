@@ -21,22 +21,28 @@ def load_and_process_data(_filehash=None):
     grid = gpd.read_file(GRID_PATH).to_crs("EPSG:4326")
     centroids = gpd.read_file(CENTROIDS_PATH).to_crs("EPSG:4326")
    
-    if len(grid) > 50000:
+    MAX_POINTS = 50000
+
+    if len(grid) > MAX_POINTS:
         high_density = grid[grid['density'] > 0.05]
         low_density = grid[grid['density'] <= 0.05]
-       
-        n_sample = min(50000 - len(high_density), len(low_density))
-        low_density_sampled = low_density.sample(n=n_sample, random_state=42)
-       
-        grid_sampled = pd.concat([high_density, low_density_sampled])
+
+        if len(high_density) >= MAX_POINTS:
+            grid_sampled = high_density.sample(n=MAX_POINTS, random_state=42)
+        else:
+            remaining = MAX_POINTS - len(high_density)
+            n_sample = min(remaining, len(low_density))
+            low_density_sampled = low_density.sample(n=n_sample, random_state=42)
+
+            grid_sampled = pd.concat([high_density, low_density_sampled])
     else:
         grid_sampled = grid
-   
-    grid_sampled['lon'] = grid_sampled.geometry.x
-    grid_sampled['lat'] = grid_sampled.geometry.y
-   
-    return grid_sampled, centroids
 
+    grid_centroids = grid_sampled.geometry.centroid
+    grid_sampled['lon'] = grid_centroids.x
+    grid_sampled['lat'] = grid_centroids.y
+
+    return grid_sampled, centroids
 
 try:
     with st.spinner("Loading data..."):
