@@ -39,7 +39,7 @@ if page == "Main Map":
                 n_sample = min(remaining, len(low_density))
                 low_density_sampled = low_density.sample(n=n_sample, random_state=42)
 
-                grid_sampled = pd.concat([high_density, low_density_sampled])
+                grid_sampled = grid #pd.concat([high_density, low_density_sampled])
         else:
             grid_sampled = grid
 
