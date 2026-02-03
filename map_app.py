@@ -26,8 +26,8 @@ if page == "Main Map":
     
         MAX_POINTS = 50000
         if len(grid) > MAX_POINTS:
-            high_density = grid[grid['total_floor_density'] > 0.05]
-            low_density = grid[grid['total_floor_density'] <= 0.05]
+            high_density = grid[grid['flr_dens'] > 0.05]
+            low_density = grid[grid['flr_dens'] <= 0.05]
             if len(high_density) >= MAX_POINTS:
                 grid_sampled = high_density.sample(n=MAX_POINTS, random_state=42)
             else:
@@ -68,7 +68,7 @@ if page == "Main Map":
 
     metric_config = {
         "Building Density": {
-            "column": "total_floor_density",
+            "column": "flr_dens",
             "color_scheme": "YlOrRd",
             "title": "Building Coverage Fraction"
         },
@@ -125,7 +125,7 @@ if page == "Main Map":
         hex_data = aggregate_to_h3(grid, column_name, h3_resolution)
 
     hex_data['display_value'] = (hex_data['avg_value'] * 100).round(2).astype(str) + '%' \
-        if column_name == 'total_floor_density' else hex_data['avg_value'].round(2).astype(str)
+        if column_name == 'flr_dens' else hex_data['avg_value'].round(2).astype(str)
     if 'fp_dens' in hex_data.columns:
         hex_data['footprint_display'] = (hex_data['fp_dens'] * 100).round(2).astype(str) + '%'
     else:
