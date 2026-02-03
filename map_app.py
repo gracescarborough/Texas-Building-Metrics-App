@@ -20,25 +20,20 @@ if page == "Main Map":
 
     @st.cache_data(show_spinner=False)
     def load_and_process_data(_filehash=None):
-
-
         """Load data and downsample if needed"""
         grid = gpd.read_file(GRID_PATH).to_crs("EPSG:4326")
         centroids = gpd.read_file(CENTROIDS_PATH).to_crs("EPSG:4326")
     
         MAX_POINTS = 50000
-
         if len(grid) > MAX_POINTS:
-            high_density = grid[grid['density'] > 0.05]
-            low_density = grid[grid['density'] <= 0.05]
-
+            high_density = grid[grid['total_floor_density'] > 0.05]
+            low_density = grid[grid['total_floor_density'] <= 0.05]
             if len(high_density) >= MAX_POINTS:
                 grid_sampled = high_density.sample(n=MAX_POINTS, random_state=42)
             else:
                 remaining = MAX_POINTS - len(high_density)
                 n_sample = min(remaining, len(low_density))
                 low_density_sampled = low_density.sample(n=n_sample, random_state=42)
-
                 grid_sampled = pd.concat([high_density, low_density_sampled])
         else:
             grid_sampled = grid
@@ -66,15 +61,14 @@ if page == "Main Map":
     )
 
     hex_size_option = st.sidebar.slider("Hexagon Size", 1, 3, 2)
-    hex_size_map = {1: 8, 2: 7, 3: 6}
+    hex_size_map = {1: 7, 2: 6, 3: 5}
     h3_resolution = hex_size_map[hex_size_option]
 
     enable_3d = st.sidebar.checkbox("Enable 3D View", value=False)
-    elevation_scale = 500 if enable_3d else 0
 
     metric_config = {
         "Building Density": {
-            "column": "density",
+            "column": "total_floor_density",
             "color_scheme": "YlOrRd",
             "title": "Building Coverage Fraction"
         },
@@ -100,57 +94,49 @@ if page == "Main Map":
     @st.cache_data
     def aggregate_to_h3(_grid_df, column_name, resolution):
         """Aggregate grid data into H3 hexagons"""
-        grid_df = _grid_df
-        grid_clean = grid_df[['lon', 'lat', column_name]].dropna().copy()
+        grid_df = _grid_df.copy()
+        cols_needed = ['lon', 'lat', column_name]
+        if 'fp_dens' in grid_df.columns:
+            cols_needed.append('fp_dens')
+        grid_clean = grid_df[cols_needed].dropna().copy()
         
         grid_clean['h3'] = grid_clean.apply(
             lambda row: h3.latlng_to_cell(row['lat'], row['lon'], resolution),
             axis=1
         )
         
-        hex_agg = grid_clean.groupby('h3').agg({
-            column_name: 'max',
-            'lon': 'count'
-        }).reset_index()
-        
-        hex_agg.columns = ['h3', 'avg_value', 'point_count']
-        
+        agg_dict = {column_name: 'mean', 'lon': 'count'}
+        if 'fp_dens' in grid_clean.columns:
+            agg_dict['fp_dens'] = 'mean'
+        hex_agg = grid_clean.groupby('h3').agg(agg_dict).reset_index()
+        hex_agg.columns = ['h3', 'avg_value', 'point_count'] + (['fp_dens'] if 'fp_dens' in hex_agg.columns else [])
+
         def get_boundary_polygon(h3_cell):
             boundary = h3.cell_to_boundary(h3_cell)
             return [[lng, lat] for lat, lng in boundary]
         
         hex_agg['boundary'] = hex_agg['h3'].apply(get_boundary_polygon)
-        
-        hex_agg['center'] = hex_agg['h3'].apply(
-            lambda h: h3.cell_to_latlng(h)
-        )
+        hex_agg['center'] = hex_agg['h3'].apply(lambda h: h3.cell_to_latlng(h))
         hex_agg['lat'] = hex_agg['center'].apply(lambda x: x[0])
         hex_agg['lon'] = hex_agg['center'].apply(lambda x: x[1])
-        
         return hex_agg
 
     with st.spinner("Aggregating hexagons..."):
         hex_data = aggregate_to_h3(grid, column_name, h3_resolution)
-    vmin, vmax = hex_data['avg_value'].min(), hex_data['avg_value'].max()
-    vmean = hex_data['avg_value'].mean()
 
+    hex_data['display_value'] = (hex_data['avg_value'] * 100).round(2).astype(str) + '%' \
+        if column_name == 'total_floor_density' else hex_data['avg_value'].round(2).astype(str)
+    if 'fp_dens' in hex_data.columns:
+        hex_data['footprint_display'] = (hex_data['fp_dens'] * 100).round(2).astype(str) + '%'
+    else:
+        hex_data['footprint_display'] = 'N/A'
+
+    vmin, vmax = hex_data['avg_value'].min(), hex_data['avg_value'].max()
     hex_data['normalized'] = (hex_data['avg_value'] - vmin) / (vmax - vmin) if vmax > vmin else 0
     hex_data['normalized'] = hex_data['normalized'].clip(0, 1)
-
-    if enable_3d:
-        hex_data['elevation'] = hex_data['normalized'] * 100000
-    else:
-        hex_data['elevation'] = 0
-
-    if column_name == 'density':
-        hex_data['display_value'] = (hex_data['avg_value'] * 100).round(2).astype(str) + '%'
-    elif column_name == 'eei_interp':
-        hex_data['display_value'] = hex_data['avg_value'].round(2).astype(str) + ' MJ/m²'
-    else:
-        hex_data['display_value'] = hex_data['avg_value'].round(2).astype(str) + ' kgCO2e/m²'
+    hex_data['elevation'] = hex_data['normalized'] * 100000 if enable_3d else 0
 
     def get_color(normalized, color_scheme):
-        """Get RGB color based on normalized value"""
         if color_scheme == "YlOrRd":
             r = int(255)
             g = int(255 * (1 - normalized * 0.7))
@@ -160,10 +146,25 @@ if page == "Main Map":
             g = int(252 + (94 - 252) * normalized) 
             b = int(240 + (168 - 240) * normalized)
         return [r, g, b, 255]
+    
+    hex_data['color'] = hex_data['normalized'].apply(lambda x: get_color(x, selected_config['color_scheme']))
 
-    hex_data['color'] = hex_data['normalized'].apply(
-        lambda x: get_color(x, selected_config['color_scheme'])
+    center_lat = centroids.geometry.y.mean()
+    center_lon = centroids.geometry.x.mean()
+    view_state = pdk.ViewState(
+        latitude=center_lat,
+        longitude=center_lon,
+        zoom=6,
+        pitch=45 if enable_3d else 0,
+        bearing=0
     )
+
+    tooltip = {
+        "html": "<b>Building Density</b><br/>"
+                "Total Floor Density: {display_value}<br/>"
+                "Footprint Density: {footprint_display}",
+        "style": {"backgroundColor": "steelblue", "color": "white", "fontSize": "12px", "padding": "10px"}
+    }
 
     polygon_layer = pdk.Layer(
         "PolygonLayer",
@@ -180,40 +181,6 @@ if page == "Main Map":
         opacity=1.0
     )
 
-    center_lat = centroids.geometry.y.mean()
-    center_lon = centroids.geometry.x.mean()
-
-    view_state = pdk.ViewState(
-        latitude=center_lat,
-        longitude=center_lon,
-        zoom=6,
-        pitch=45 if enable_3d else 0,
-        bearing=0
-    )
-
-    if column_name == "density":
-        value_label = "Building density"
-    else:
-        value_label = "Avg " + metric
-
-    tooltip = {
-        "html": "<b>Hexagon Data</b><br/>"
-                f"{value_label}: {{display_value}}",
-        "style": {
-            "backgroundColor": "steelblue",
-            "color": "white",
-            "fontSize": "12px",
-            "padding": "10px"
-        }
-    }
-
-    st.title("Texas Building Metrics Explorer")
-    st.markdown(
-        "<p style='text-align: right; color: #999; font-size: 11px; margin-top: -15px;'>By Grace Scarborough | © 2026</p>",
-        unsafe_allow_html=True
-    )
-    st.markdown(f"**Currently displaying:** {metric}")
-
     r = pdk.Deck(
         layers=[polygon_layer],
         initial_view_state=view_state,
@@ -221,12 +188,19 @@ if page == "Main Map":
         tooltip=tooltip
     )
 
+    st.title("Texas Building Metrics Explorer")
+    st.markdown("<p style='text-align: right; color: #999; font-size: 11px; margin-top: -15px;'>By Grace Scarborough | © 2026</p>", unsafe_allow_html=True)
+    st.markdown(f"**Currently displaying:** {metric}")
+
     st.pydeck_chart(r, use_container_width=True)
 
     st.sidebar.markdown("---")
     st.sidebar.subheader("Statistics")
-    st.sidebar.metric("Min Value", f"{vmin:.4f}")
-    st.sidebar.metric("Max Value", f"{vmax:.4f}")
+    st.sidebar.metric("Min Total Floor Density", f"{hex_data['avg_value'].min() * 100:.2f}%")
+    st.sidebar.metric("Max Total Floor Density", f"{hex_data['avg_value'].max() * 100:.2f}%")
+    if 'fp_dens' in hex_data.columns:
+        st.sidebar.metric("Min Footprint Density", f"{hex_data['fp_dens'].min() * 100:.2f}%")
+        st.sidebar.metric("Max Footprint Density", f"{hex_data['fp_dens'].max() * 100:.2f}%")
 
 elif page == "About":
     st.title("About This App")
