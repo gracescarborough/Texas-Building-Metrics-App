@@ -133,7 +133,7 @@ if page == "Main Map":
         hex_data['footprint_display'] = 'N/A'
 
     vmin = hex_data['avg_value'].quantile(0.05)
-    vmax = hex_data['avg_value'].quantile(0.98)
+    vmax = hex_data['avg_value'].quantile(0.99)
     hex_data['normalized'] = (hex_data['avg_value'] - vmin) / (vmax - vmin)
     hex_data['normalized'] = hex_data['normalized'].clip(0, 1)
     hex_data['elevation'] = hex_data['normalized'] * 100000 if enable_3d else 0
