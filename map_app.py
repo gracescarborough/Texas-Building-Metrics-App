@@ -243,15 +243,25 @@ elif page == "About":
     """)
 
 elif page == "Future Building Development":
+    baseline_EE_MJ = 7.885e12
+    baseline_EC_kg = 4.112e11
     st.title("Future Building Development Metrics")
+    st.markdown("### Current Baseline Totals")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("2025 Estimated Embodied Energy (MJ)", f"{baseline_EE_MJ:.2e}")
+    with col2:
+        st.metric("2025 Estimated Embodied Carbon (kg CO₂e)", f"{baseline_EC_kg:.2e}")
+    st.markdown("---")
 
     years = [2030, 2035, 2040, 2045, 2050]
 
     for year in years:
         st.header(f"{year} Projections")
 
-        eei_path = f"FloodFiles/EEI_matrix_{year}.csv"
-        eci_path = f"FloodFiles/ECI_matrix_{year}.csv"
+        eei_path = f"FloodFiles/Matrices/EEI_matrix_{year}.csv"
+        eci_path = f"FloodFiles/Matrices/ECI_matrix_{year}.csv"
 
         try:
             eei_df = pd.read_csv(eei_path, index_col=0).apply(pd.to_numeric)
