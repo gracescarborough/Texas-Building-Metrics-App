@@ -98,8 +98,9 @@ if page == "Main Map":
         cols_needed = ['lon', 'lat', column_name]
         if 'fp_dens' in grid_df.columns:
             cols_needed.append('fp_dens')
-        grid_clean = grid_df[cols_needed].dropna().copy()
-        
+        grid_clean = grid_df[cols_needed].copy()
+        grid_clean = grid_clean.dropna(subset=['lon', 'lat', column_name])
+
         grid_clean['h3'] = grid_clean.apply(
             lambda row: h3.latlng_to_cell(row['lat'], row['lon'], resolution),
             axis=1
