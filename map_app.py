@@ -196,10 +196,8 @@ if page == "Main Map":
 
     st.sidebar.markdown("---")
     st.sidebar.subheader("Statistics")
-    st.sidebar.metric("Min Total Floor Density", f"{hex_data['avg_value'].min() * 100:.2f}%")
     st.sidebar.metric("Max Total Floor Density", f"{hex_data['avg_value'].max() * 100:.2f}%")
     if 'fp_dens' in hex_data.columns:
-        st.sidebar.metric("Min Footprint Density", f"{hex_data['fp_dens'].min() * 100:.2f}%")
         st.sidebar.metric("Max Footprint Density", f"{hex_data['fp_dens'].max() * 100:.2f}%")
 
 elif page == "About":
