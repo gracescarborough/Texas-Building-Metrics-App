@@ -245,24 +245,25 @@ elif page == "About":
 elif page == "Future Building Development":
     st.title("Future Building Development Metrics")
 
-    eei_path = "FloodFiles/EEI_matrix.csv"
-    eci_path = "FloodFiles/ECI_matrix.csv"
+    years = [2030, 2035, 2040, 2045, 2050]
 
-    try:
-        eei_df = pd.read_csv(eei_path, index_col=0)
-        eci_df = pd.read_csv(eci_path, index_col=0)
-    except Exception as e:
-        st.error(f"Error loading CSVs: {e}")
-        st.stop()
+    for year in years:
+        st.header(f"{year} Projections")
 
-    st.subheader("EEI Matrix (MJ/m²)")
-    st.dataframe(eei_df)
+        eei_path = f"FloodFiles/EEI_matrix_{year}.csv"
+        eci_path = f"FloodFiles/ECI_matrix_{year}.csv"
 
-    st.markdown("#### Notes on EEI Matrix")
-    st.text_area("EEI notes notes notes", height=100)
+        try:
+            eei_df = pd.read_csv(eei_path, index_col=0).apply(pd.to_numeric)
+            eci_df = pd.read_csv(eci_path, index_col=0).apply(pd.to_numeric)
+        except Exception as e:
+            st.warning(f"Could not load matrices for {year}: {e}")
+            continue
 
-    st.subheader("ECI Matrix (kgCO2e/m²)")
-    st.dataframe(eci_df)
+        st.subheader("EEI Matrix (MJ/m²)")
+        st.dataframe(eei_df.style.format("{:.2e}"))
 
-    st.markdown("#### Notes on ECI Matrix")
-    st.text_area("ECI notes notes notes", height=100)
+        st.subheader("ECI Matrix (kgCO2e/m²)")
+        st.dataframe(eci_df.style.format("{:.2e}"))
+
+        st.divider()
