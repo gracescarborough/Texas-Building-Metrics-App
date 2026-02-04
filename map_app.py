@@ -257,23 +257,34 @@ elif page == "Future Building Development":
 
     years = [2030, 2035, 2040, 2045, 2050]
 
-    for year in years:
-        st.header(f"{year} Projections")
+    year = st.selectbox(
+        "Select Projection Year",
+        years,
+        index=0
+    )
+    
+    eei_path = f"FloodFiles/Matrices/EEI_matrix_{year}.csv"
+    eci_path = f"FloodFiles/Matrices/ECI_matrix_{year}.csv"
+    eei_pct_path = f"FloodFiles/Matrices/EEI_pct_{year}.csv"
+    eci_pct_path = f"FloodFiles/Matrices/ECI_pct_{year}.csv"
 
-        eei_path = f"FloodFiles/Matrices/EEI_matrix_{year}.csv"
-        eci_path = f"FloodFiles/Matrices/ECI_matrix_{year}.csv"
+    try:
+        eei_df = pd.read_csv(eei_path, index_col=0).apply(pd.to_numeric)
+        eci_df = pd.read_csv(eci_path, index_col=0).apply(pd.to_numeric)
+        eei_pct = pd.read_csv(eei_pct_path, index_col=0).apply(pd.to_numeric)
+        eci_pct = pd.read_csv(eci_pct_path, index_col=0).apply(pd.to_numeric)
+    except Exception as e:
+        st.warning(f"Could not load matrices for {year}: {e}")
+        st.stop()
 
-        try:
-            eei_df = pd.read_csv(eei_path, index_col=0).apply(pd.to_numeric)
-            eci_df = pd.read_csv(eci_path, index_col=0).apply(pd.to_numeric)
-        except Exception as e:
-            st.warning(f"Could not load matrices for {year}: {e}")
-            continue
+    st.subheader(f"{year} EEI Totals (MJ)")
+    st.dataframe(eei_df.style.format("{:.2e}"))
 
-        st.subheader("EEI Matrix (MJ/m²)")
-        st.dataframe(eei_df.style.format("{:.2e}"))
+    st.subheader(f"{year} EEI % Increase vs Baseline")
+    st.dataframe(eei_pct.style.format("{:+.1f}%"))
 
-        st.subheader("ECI Matrix (kgCO2e/m²)")
-        st.dataframe(eci_df.style.format("{:.2e}"))
+    st.subheader(f"{year} ECI Totals (kg CO₂e)")
+    st.dataframe(eci_df.style.format("{:.2e}"))
 
-        st.divider()
+    st.subheader(f"{year} ECI % Increase vs Baseline")
+    st.dataframe(eci_pct.style.format("{:+.1f}%"))
