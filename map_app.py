@@ -198,9 +198,31 @@ if page == "Main Map":
 
     st.sidebar.markdown("---")
     st.sidebar.subheader("Statistics")
-    st.sidebar.metric("Max Total Floor Density", f"{hex_data['avg_value'].max() * 100:.2f}%")
-    if 'fp_dens' in hex_data.columns:
-        st.sidebar.metric("Max Footprint Density", f"{hex_data['fp_dens'].max() * 100:.2f}%")
+
+    max_val = hex_data['avg_value'].max()
+
+    if metric == "Building Density":
+        st.sidebar.metric(
+            "Max Total Floor Density",
+            f"{max_val * 100:.2f}%"
+        )
+        if 'fp_dens' in hex_data.columns:
+            st.sidebar.metric(
+                "Max Footprint Density",
+                f"{hex_data['fp_dens'].max() * 100:.2f}%"
+            )
+
+    elif metric == "Embodied Energy Intensity (EEI)":
+        st.sidebar.metric(
+            "Max EEI (MJ/m²)",
+            f"{max_val:.1f}"
+        )
+
+    elif metric == "Embodied Carbon Intensity (ECI)":
+        st.sidebar.metric(
+            "Max ECI (kgCO₂e/m²)",
+            f"{max_val:.1f}"
+        )
 
 elif page == "About":
     st.title("About This App")
