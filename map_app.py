@@ -265,8 +265,8 @@ elif page == "Future Building Development":
     
     eei_path = f"FloodFiles/Matrices/EEI_matrix_{year}.csv"
     eci_path = f"FloodFiles/Matrices/ECI_matrix_{year}.csv"
-    eei_pct_path = f"FloodFiles/Matrices/EEI_pct_{year}.csv"
-    eci_pct_path = f"FloodFiles/Matrices/ECI_pct_{year}.csv"
+    eei_pct_path = f"FloodFiles/Matrices/EEI_percent_{year}.csv"
+    eci_pct_path = f"FloodFiles/Matrices/ECI_percent_{year}.csv"
 
     try:
         eei_df = pd.read_csv(eei_path, index_col=0).apply(pd.to_numeric)
