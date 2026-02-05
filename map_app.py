@@ -238,8 +238,10 @@ elif page == "About":
     1. Select a metric from the sidebar.
     2. Adjust the hexagon size and toggle 3D view.
     3. Hover over hexagons to see values.
+    4. View future EEI and ECI estimations in the "future building development" tab
+    Note: Footprint density only accounts for building area on the ground, while total floor density takes into account every floor or multi-storey buildings.
     
-    This app is created by Grace Scarborough, © 2026.
+    This app is created by Grace Scarborough, 2026.
     """)
 
 elif page == "Future Building Development":
