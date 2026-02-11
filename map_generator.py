@@ -26,18 +26,53 @@ DEFAULT_TYPE = "Other"
 btype_column = "Simp_type"
 num_floors_column = "num_floors"
 
-def estimate_floors(btype, footprint_area_m2):
+def estimate_floors(btype, footprint_area_m2, is_urban=False):
+    """
+    Estimate floors based on building type, footprint, and urban context.
+    is_urban should be True for high-density urban cores where tall buildings exist
+    """
+    
     if btype == "Residential":
-        floors = 1.1145 * np.exp(0.000257 * footprint_area_m2)
+        if is_urban:
+            if footprint_area_m2 < 600:
+                floors = 1.164 + 0.0002*footprint_area_m2
+            else:
+                floors = -2.196 + 0.0051*footprint_area_m2
+        else:
+            if footprint_area_m2 < 700:
+                floors = 1 + 0.001*footprint_area_m2
+            else:
+                floors = 3.8679 + 0.0005*footprint_area_m2
+                
     elif btype == "Commercial":
-        floors = 1.1808 * np.exp(0.00004 * footprint_area_m2)
+        if is_urban:
+            if footprint_area_m2 < 2000:
+                floors = 1.1762 + 0.0001*footprint_area_m2
+            else:
+                floors = 3.8608 + 0.0002*footprint_area_m2
+        else:
+            if footprint_area_m2 < 3000:
+                floors = 0.9721 + 0.0006*footprint_area_m2
+            else:
+                floors = 3.0796 + 0.00003*footprint_area_m2
+                
     elif btype == "Industrial":
-        floors = 1
+        floors = 1 
+        
     elif btype == "Institutional":
-        floors = 1.1808 * np.exp(0.00004 * footprint_area_m2)
-    else:  # Other
+        if is_urban:
+            if footprint_area_m2 < 2000:
+                floors = 1.1762 + 0.0001*footprint_area_m2
+            else:
+                floors = 3.8608 + 0.0002*footprint_area_m2
+        else:
+            if footprint_area_m2 < 3000:
+                floors = 0.9721 + 0.0006*footprint_area_m2
+            else:
+                floors = 3.0796 + 0.00003*footprint_area_m2
+    else:
         floors = 1
-
+    
     floors = max(1, min(floors, 70))
     return int(round(floors))
 
@@ -95,6 +130,18 @@ for gdb_file in tqdm(all_gdb_files, desc="Processing GDB files"):
             total_ec = 0.0
             count = 0
 
+            temp_footprint = 0.0 ##############
+            for _, bldg in subset_bldg.iterrows():
+                geom = bldg.geometry
+                if geom is None or geom.is_empty:
+                    continue
+                inter = geom.intersection(buffer)
+                if not inter.is_empty and inter.area > 0:
+                    temp_footprint += inter.area
+            
+            current_footprint_density = temp_footprint / M2_PER_MI2
+            is_urban = (current_footprint_density > 0.012) #########
+
             for _, bldg in subset_bldg.iterrows():
                 geom = bldg.geometry
                 if geom is None or geom.is_empty:
@@ -114,7 +161,7 @@ for gdb_file in tqdm(all_gdb_files, desc="Processing GDB files"):
 
                 num_floors = bldg.get(num_floors_column)
                 if pd.isna(num_floors) or num_floors <= 0:
-                    num_floors = estimate_floors(btype, footprint_area)
+                    num_floors = estimate_floors(btype, footprint_area, is_urban)
 
                 total_bldg_area = footprint_area * num_floors
                 total_area += total_bldg_area
@@ -125,6 +172,14 @@ for gdb_file in tqdm(all_gdb_files, desc="Processing GDB files"):
                 count += 1
 
             avg_floors = (total_floors_weighted / total_footprint) if total_footprint > 0 else 0.0
+
+            # Right before results.append({...})
+            if abs(total_footprint - temp_footprint) > 0.01:
+                print(f"WARNING Sample {sample_id}: Footprint mismatch! temp={temp_footprint:.2f}, total={total_footprint:.2f}")
+
+            # Also check for impossible densities
+            if total_footprint / M2_PER_MI2 > 1.0:
+                print(f"WARNING Sample {sample_id}: Impossible footprint density = {total_footprint / M2_PER_MI2:.4f}")
 
             results.append({
                 "sample_id": sample_id,
