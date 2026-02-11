@@ -130,18 +130,23 @@ for gdb_file in tqdm(all_gdb_files, desc="Processing GDB files"):
             total_ec = 0.0
             count = 0
 
-            temp_footprint = 0.0 ##############
             for _, bldg in subset_bldg.iterrows():
                 geom = bldg.geometry
                 if geom is None or geom.is_empty:
                     continue
                 inter = geom.intersection(buffer)
                 if not inter.is_empty and inter.area > 0:
-                    temp_footprint += inter.area
-            
-            current_footprint_density = temp_footprint / M2_PER_MI2
-            is_urban = (current_footprint_density > 0.012) #########
+                    total_footprint += inter.area
 
+            current_footprint_density = total_footprint / M2_PER_MI2
+            is_urban = (current_footprint_density > 0.012)
+
+            # Reset for second pass
+            total_area = 0.0
+            total_footprint = 0.0
+            total_floors_weighted = 0.0
+
+            # Second pass: calculate everything with correct floor estimates
             for _, bldg in subset_bldg.iterrows():
                 geom = bldg.geometry
                 if geom is None or geom.is_empty:
@@ -172,14 +177,6 @@ for gdb_file in tqdm(all_gdb_files, desc="Processing GDB files"):
                 count += 1
 
             avg_floors = (total_floors_weighted / total_footprint) if total_footprint > 0 else 0.0
-
-            # Right before results.append({...})
-            if abs(total_footprint - temp_footprint) > 0.01:
-                print(f"WARNING Sample {sample_id}: Footprint mismatch! temp={temp_footprint:.2f}, total={total_footprint:.2f}")
-
-            # Also check for impossible densities
-            if total_footprint / M2_PER_MI2 > 1.0:
-                print(f"WARNING Sample {sample_id}: Impossible footprint density = {total_footprint / M2_PER_MI2:.4f}")
 
             results.append({
                 "sample_id": sample_id,
