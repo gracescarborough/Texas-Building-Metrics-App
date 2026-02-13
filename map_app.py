@@ -161,10 +161,19 @@ if page == "Main Map":
         bearing=0
     )
 
+    if metric == "Building Density":
+        tooltip_html = (
+            "<b>Building Density</b><br>"
+            "Total Floor Density: {display_value}<br>"
+            "Footprint Density: {footprint_display}"
+        )
+    elif metric == "Embodied Energy Intensity (EEI)":
+        tooltip_html = "<b>Average Embodied Energy Intensity</b><br>{display_value} MJ/m²"
+    elif metric == "Embodied Carbon Intensity (ECI)":
+        tooltip_html = "<b>Average Embodied Carbon Intensity</b><br>{display_value} kgCO₂e/m²"
+
     tooltip = {
-        "html": "<b>Building Density</b><br/>"
-                "Total Floor Density: {display_value}<br/>"
-                "Footprint Density: {footprint_display}",
+        "html": tooltip_html,
         "style": {"backgroundColor": "steelblue", "color": "white", "fontSize": "12px", "padding": "10px"}
     }
 
