@@ -9,10 +9,26 @@ from tqdm import tqdm
 import gc
 import fiona
 
+HEIGHTS_DIR = "/home/grace/FloodFiles"
 OSWD = "/home/grace/FloodFiles"
 GDB_PATTERN = "FPR*Bldgs_SVI_Pop_Feb2025.gdb"
 COUNTY_SHP = "/home/grace/US_COUNTY_SHPFILE/US_county_cont.shp"
 SAMPLE_COORD_CSV = "sample_coordinates.csv"
+
+height_data = {}
+for btype, fname in [
+    ("Residential",  "TX_residential_heights2.csv"),
+    ("Commercial",   "TX_commercial_heights2.csv"),
+    ("Institutional","TX_public_heights2.csv"),
+]:
+    path = os.path.join(HEIGHTS_DIR, fname)
+    df = pd.read_csv(path)[["footprint_m2", "Est_floors", "is_urban"]].dropna()
+    df["Est_floors"] = df["Est_floors"].astype(int).clip(lower=1, upper=70)
+    height_data[btype] = df
+
+print("Loaded height distributions:")
+for k, v in height_data.items():
+    print(f"  {k}: {len(v)} buildings")
 
 GRID_RES_M = 750
 TEXAS_CRS = "EPSG:3083"
@@ -26,58 +42,42 @@ DEFAULT_TYPE = "Other"
 btype_column = "Simp_type"
 num_floors_column = "num_floors"
 
-def estimate_floors(btype, footprint_area_m2, is_urban=False):
+def sample_floors(btype, footprint_area_m2, is_urban=False, n_bins=5, rng=None):
     """
-    Estimate floors based on building type, footprint, and urban context.
-    is_urban should be True for high-density urban cores where tall buildings exist
+    Sample a floor count from the empirical distribution of buildings
+    with similar type, urban context, and footprint size.
+    Falls back to wider bins if too few neighbors are found.
     """
-    
-    if btype == "Residential":
-        if is_urban:
-            if footprint_area_m2 < 600:
-                floors = 1.164 + 0.0002*footprint_area_m2
-            else:
-                floors = -2.196 + 0.0051*footprint_area_m2
-        else:
-            if footprint_area_m2 < 700:
-                floors = 1 + 0.001*footprint_area_m2
-            else:
-                floors = 3.8679 + 0.0005*footprint_area_m2
-                
-    elif btype == "Commercial":
-        if is_urban:
-            if footprint_area_m2 < 2000:
-                floors = 1.1762 + 0.0001*footprint_area_m2
-            else:
-                floors = 3.8608 + 0.0002*footprint_area_m2
-        else:
-            if footprint_area_m2 < 3000:
-                floors = 0.9721 + 0.0006*footprint_area_m2
-            else:
-                floors = 3.0796 + 0.00003*footprint_area_m2
-                
-    elif btype == "Industrial":
-        floors = 1 
-        
-    elif btype == "Institutional":
-        if is_urban:
-            if footprint_area_m2 < 2000:
-                floors = 1.1762 + 0.0001*footprint_area_m2
-            else:
-                floors = 3.8608 + 0.0002*footprint_area_m2
-        else:
-            if footprint_area_m2 < 3000:
-                floors = 0.9721 + 0.0006*footprint_area_m2
-            else:
-                floors = 3.0796 + 0.00003*footprint_area_m2
-    else:
-        floors = 1
-    
-    floors = max(1, min(floors, 70))
-    return int(round(floors))
+    if rng is None:
+        rng = np.random.default_rng()
+
+    if btype not in height_data:
+        return 1
+
+    df = height_data[btype]
+
+    pool = df[df["is_urban"] == is_urban]
+    if len(pool) < 10:
+        pool = df  
+
+    for n in [n_bins, 3, 1]: 
+        bins = pd.qcut(pool["footprint_m2"], q=n, duplicates="drop", retbins=True)[1]
+        bin_idx = np.searchsorted(bins, footprint_area_m2, side="right") - 1
+        bin_idx = np.clip(bin_idx, 0, len(bins) - 2)
+        lo, hi = bins[bin_idx], bins[bin_idx + 1]
+        neighbors = pool[(pool["footprint_m2"] >= lo) & (pool["footprint_m2"] <= hi)]
+        if len(neighbors) >= 5:
+            break
+
+    if len(neighbors) == 0:
+        neighbors = pool 
+
+    floors = int(rng.choice(neighbors["Est_floors"].values))
+    return max(1, min(floors, 70))
 
 os.chdir(OSWD)
 random.seed(RANDOM_SEED)
+rng = np.random.default_rng(RANDOM_SEED)
 
 sample_coords_df = pd.read_csv(SAMPLE_COORD_CSV)
 sample_points = [Point(xy) for xy in zip(sample_coords_df['x_m'], sample_coords_df['y_m'])]
@@ -166,7 +166,7 @@ for gdb_file in tqdm(all_gdb_files, desc="Processing GDB files"):
 
                 num_floors = bldg.get(num_floors_column)
                 if pd.isna(num_floors) or num_floors <= 0:
-                    num_floors = estimate_floors(btype, footprint_area, is_urban)
+                    num_floors = sample_floors(btype, footprint_area, is_urban, rng=rng)
 
                 total_bldg_area = footprint_area * num_floors
                 total_area += total_bldg_area
