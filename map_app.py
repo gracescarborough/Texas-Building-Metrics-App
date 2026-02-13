@@ -200,7 +200,7 @@ if page == "Main Map":
     )
 
     st.title("Texas Building Metrics Explorer")
-    st.markdown("<p style='text-align: right; color: #999; font-size: 11px; margin-top: -15px;'>By Grace Scarborough | © 2026</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: right; color: #999; font-size: 11px; margin-top: -15px;'>By Grace Scarborough | 2026</p>", unsafe_allow_html=True)
     st.markdown(f"**Currently displaying:** {metric}")
 
     st.pydeck_chart(r, use_container_width=True)
@@ -234,20 +234,24 @@ if page == "Main Map":
         )
 
 elif page == "About":
-    st.title("About This App")
+    st.title("About The Texas Building Metrics Explorer")
     st.markdown("""
-    ### Texas Building Metrics Explorer
+    The goal of this app is to use building density, size, and usage data to estimate the embodied energy and embodied carbon of all buildings across Texas. These estimates are intended to provide insight into how urban development, such as dense city centers versus sprawling development, affects overall energy consumption and carbon emissions. 
     This app visualizes building metrics across Texas using hexagon aggregation. 
     You can explore metrics like:
     - **Building Density**
     - **Embodied Energy Intensity (EEI)**
     - **Embodied Carbon Intensity (ECI)**
 
+    **Background:**
+                
+    Between 2024-2025, Texas had the fourth largest percent growth rate out of all US states and territories, and the overall highest numeric growth due to factors such as work opportunities or affordable housing. A census estimate in July of 2025 estimated the Texas population was about 31.7 million people. The estimated population growth between now and 2050 is 6.8 to 10.8 mission people, which is a 21-34 percent estimated increase. Therefore, Texas will need to see a lot of development in the next few decades to accomodate this growth.
+    
     **How to Use:**
     1. Select a metric from the sidebar.
     2. Adjust the hexagon size and toggle 3D view.
-    3. Hover over hexagons to see values.
-    4. View future EEI and ECI estimations in the "future building development" tab
+    3. Hover over hexagons to see specific values.
+    4. View future statewide embodied energy and embodied carbon estimations in the "future building development" tab. This shows estimations for sprawling development, which prioritizes single-family housing in low-density areas, dense development, which prioritizes multi-family housing in high density areas, and a mix of both. There are also three scenarios for high, low and mid population estimates.
     
     Note: Footprint density only accounts for building area on the ground, while total floor density takes into account every floor or multi-storey buildings.
     
@@ -255,8 +259,8 @@ elif page == "About":
     """)
 
 elif page == "Future Building Development":
-    baseline_EE_MJ = 7.885e12
-    baseline_EC_kg = 4.112e11
+    baseline_EE_MJ = 2.47e13
+    baseline_EC_kg = 1.31e12
     st.title("Future Building Development Metrics")
     st.markdown("### Current Baseline Totals")
 
