@@ -289,14 +289,14 @@ elif page == "Future Building Development":
         st.warning(f"Could not load matrices for {year}: {e}")
         st.stop()
 
-    st.subheader(f"{year} EEI Totals (MJ)")
+    st.subheader(f"{year} Embodied Energy (MJ)")
     st.dataframe(eei_df.style.format("{:.2e}"))
 
-    st.subheader(f"{year} EEI % Increase vs Baseline")
+    st.subheader(f"{year} Embodied Energy % Increase From 2025")
     st.dataframe(eei_pct.style.format("{:+.1f}%"))
 
-    st.subheader(f"{year} ECI Totals (kg CO₂e)")
+    st.subheader(f"{year} Embodied Carbon (kg CO₂e)")
     st.dataframe(eci_df.style.format("{:.2e}"))
 
-    st.subheader(f"{year} ECI % Increase vs Baseline")
+    st.subheader(f"{year} Embodied Carbon % Increase From 2025")
     st.dataframe(eci_pct.style.format("{:+.1f}%"))
