@@ -262,17 +262,17 @@ elif page == "Future Building Development":
     baseline_EE_MJ = 2.47e13
     baseline_EC_kg = 1.31e12
     
-    baseline_EE_TJ = baseline_EE_MJ / 1e6
-    baseline_EC_Gg = baseline_EC_kg / 1e6
+    baseline_EE_PJ = baseline_EE_MJ / 1e9
+    baseline_EC_Tg = baseline_EC_kg / 1e9
 
     st.title("Future Building Development Metrics")
     st.markdown("### Current Baseline Totals")
 
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("2025 Estimated Embodied Energy (TJ)", f"{baseline_EE_TJ:.2e}")
+        st.metric("2025 Estimated Embodied Energy (PJ)", f"{baseline_EE_PJ:.2f}")
     with col2:
-        st.metric("2025 Estimated Embodied Carbon (Gg CO₂e)", f"{baseline_EC_Gg:.2e}")
+        st.metric("2025 Estimated Embodied Carbon (Tg CO₂e)", f"{baseline_EC_Tg:.2f}")
     st.markdown("---")
 
     years = [2030, 2035, 2040, 2045, 2050]
@@ -284,22 +284,22 @@ elif page == "Future Building Development":
     eci_pct_path = f"FloodFiles/Matrices/ECI_percent_{year}.csv"
 
     try:
-        eei_df = pd.read_csv(eei_path, index_col=0).apply(pd.to_numeric) / 1e6
-        eci_df = pd.read_csv(eci_path, index_col=0).apply(pd.to_numeric) / 1e6
+        eei_df = pd.read_csv(eei_path, index_col=0).apply(pd.to_numeric) / 1e9
+        eci_df = pd.read_csv(eci_path, index_col=0).apply(pd.to_numeric) / 1e9
         eei_pct = pd.read_csv(eei_pct_path, index_col=0).apply(pd.to_numeric)
         eci_pct = pd.read_csv(eci_pct_path, index_col=0).apply(pd.to_numeric)
     except Exception as e:
         st.warning(f"Could not load matrices for {year}: {e}")
         st.stop()
 
-    st.subheader(f"{year} Embodied Energy (TJ)")
-    st.dataframe(eei_df.style.format("{:.2e}"))
+    st.subheader(f"{year} Embodied Energy (PJ)")
+    st.dataframe(eei_df.style.format("{:.2f}"))
 
     st.subheader(f"{year} Embodied Energy % Increase From 2025")
     st.dataframe(eei_pct.style.format("{:+.1f}%"))
 
-    st.subheader(f"{year} Embodied Carbon (Gg CO₂e)")
-    st.dataframe(eci_df.style.format("{:.2e}"))
+    st.subheader(f"{year} Embodied Carbon (Tg CO₂e)")
+    st.dataframe(eci_df.style.format("{:.2f}"))
 
     st.subheader(f"{year} Embodied Carbon % Increase From 2025")
     st.dataframe(eci_pct.style.format("{:+.1f}%"))
