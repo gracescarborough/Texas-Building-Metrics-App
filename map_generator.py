@@ -36,8 +36,36 @@ RANDOM_SEED = 13545
 RADIUS_1MI_M = np.sqrt((1609.344**2) / np.pi)
 M2_PER_MI2 = 1609.344**2
 
-EEI_BY_TYPE = {"Residential":5000,"Commercial":6000,"Industrial":6500,"Institutional":7500,"Other":5000}
-ECI_BY_TYPE = {"Residential":200,"Commercial":400,"Industrial":600,"Institutional":500,"Other":300}
+def get_eei(building_type: str, stories: int) -> float:
+    """Calculate Embodied Energy Intensity based on building type and number of stories."""
+    match building_type:
+        case "Industrial":
+            return 4909
+        case "Commercial" | "Institutional":
+            return 5163 if stories <= 6 else 10500
+        case "Residential":
+            if stories == 1:
+                return 3980
+            elif stories == 2:
+                return 2770
+            else:
+                return 3532
+        case _:
+            return 5000
+
+
+def get_eci(building_type: str, stories: int) -> float:
+    """Calculate Embodied Carbon Intensity based on building type and number of stories."""
+    match building_type:
+        case "Industrial":
+            return 509
+        case "Commercial" | "Institutional":
+            return 400 if stories <= 6 else 3.7 * stories + 225.9
+        case "Residential":
+            return 232.7 + 4.46 * stories
+        case _:
+            return 300
+        
 DEFAULT_TYPE = "Other"
 btype_column = "Simp_type"
 num_floors_column = "num_floors"
@@ -161,7 +189,7 @@ for gdb_file in tqdm(all_gdb_files, desc="Processing GDB files"):
                     continue
 
                 btype = bldg.get(btype_column, DEFAULT_TYPE)
-                if pd.isna(btype) or btype not in EEI_BY_TYPE:
+                if pd.isna(btype) or btype not in ["Residential", "Commercial", "Industrial", "Institutional"]:
                     btype = DEFAULT_TYPE
 
                 num_floors = bldg.get(num_floors_column)
@@ -172,8 +200,8 @@ for gdb_file in tqdm(all_gdb_files, desc="Processing GDB files"):
                 total_area += total_bldg_area
                 total_footprint += footprint_area
                 total_floors_weighted += footprint_area * num_floors
-                total_ee += total_bldg_area * EEI_BY_TYPE[btype]
-                total_ec += total_bldg_area * ECI_BY_TYPE[btype]
+                total_ee += total_bldg_area * get_eei(btype, int(num_floors))
+                total_ec += total_bldg_area * get_eci(btype, int(num_floors))
                 count += 1
 
             avg_floors = (total_floors_weighted / total_footprint) if total_footprint > 0 else 0.0
