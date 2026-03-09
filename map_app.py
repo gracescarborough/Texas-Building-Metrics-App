@@ -213,12 +213,12 @@ if page == "Main Map":
     if metric == "Building Density":
         st.sidebar.metric(
             "Max Total Floor Density",
-            f"{max_val * 100:.2f}%"
+            f"{max_val * 1000:.2f}%"
         )
         if 'fp_dens' in hex_data.columns:
             st.sidebar.metric(
                 "Max Footprint Density",
-                f"{hex_data['fp_dens'].max() * 100:.2f}%"
+                f"{hex_data['fp_dens'].max() * 1000:.2f}%"
             )
 
     elif metric == "Embodied Energy Intensity (EEI)":
@@ -259,8 +259,8 @@ elif page == "About":
     """)
 
 elif page == "Future Building Development":
-    baseline_EE_MJ = 2.47e13
-    baseline_EC_kg = 1.31e12
+    baseline_EE_MJ = 6.58e12
+    baseline_EC_kg = 3.90e11
     
     baseline_EE_PJ = baseline_EE_MJ / 1e9
     baseline_EC_Tg = baseline_EC_kg / 1e9
