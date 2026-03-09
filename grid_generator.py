@@ -13,8 +13,6 @@ CENTROIDS_PATH = "/home/grace/FloodFiles/sample_centroids_with_stats.shp"
 grid = gpd.read_file(GRID_PATH).to_crs(TEXAS_CRS)
 centroids = gpd.read_file(CENTROIDS_PATH).to_crs(TEXAS_CRS)
 
-centroids = centroids[centroids["fp_dens"] > 0]
-
 centroid_coords = np.vstack([
     centroids.geometry.x.values,
     centroids.geometry.y.values
@@ -45,7 +43,7 @@ for col in cols_to_interp:
     grid[col] = (values[indices] * weights).sum(axis=1)
     grid[col] = grid[col].replace([np.inf, -np.inf], np.nan).fillna(0)
 
-bins = [0, 0.008, 0.04, 0.08, 0.12, 0.2, 2, np.inf]
+bins = [0, 0.0005, 0.005, 0.01, 0.04, 0.09, 0.48, np.inf]
 labels = [
     "Very Low",
     "Low",
@@ -109,7 +107,8 @@ colors = {
     "Extreme": "#800026"
 }
 
-fig, ax = plt.subplots(figsize=(12, 12))
+fig, ax = plt.subplots(figsize=(12, 12), facecolor = "white")
+ax.set_facecolor("white") 
 for cls in labels:
     subset = grid[grid["class"] == cls]
     if len(subset) > 0:

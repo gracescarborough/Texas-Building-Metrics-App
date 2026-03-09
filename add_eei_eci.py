@@ -55,15 +55,37 @@ grid['eci_interp'] = (eci_values[indices] * weights).sum(axis=1)
 print(f"EEI range: {grid['eei_interp'].min():.2f} - {grid['eei_interp'].max():.2f} MJ/m²")
 print(f"ECI range: {grid['eci_interp'].min():.2f} - {grid['eci_interp'].max():.2f} kgCO2e/m²")
 
-grid.to_file("/home/grace/FloodFiles/tx_grid_classified.shp")
 print("Grid updated with EEI/ECI interpolation.")
 
 grid_m = grid.to_crs("EPSG:3083")
 
 grid_m["area_m2"] = grid_m.geometry.area
 
-total_eei_MJ = (grid_m["eei_interp"] * grid_m["area_m2"]).sum()
-total_eci_kg = (grid_m["eci_interp"] * grid_m["area_m2"]).sum()
+# --- ADD TOTAL EEI / ECI COLUMNS ---
+
+required = ["eei_interp", "eci_interp", "flr_dens", "area_m2"]
+missing = [c for c in required if c not in grid_m.columns]
+if missing:
+    raise ValueError(f"Missing required columns for totals: {missing}")
+
+grid_m["total_eei_MJ"] = (
+    grid_m["eei_interp"] *
+    grid_m["flr_dens"] *
+    grid_m["area_m2"]
+)
+
+grid_m["total_eci_kg"] = (
+    grid_m["eci_interp"] *
+    grid_m["flr_dens"] *
+    grid_m["area_m2"]
+)
+
+grid_final = grid_m.to_crs("EPSG:4326")
+grid_final.to_file("/home/grace/FloodFiles/tx_grid_classified.shp")
+print("Grid updated with total EEI/ECI columns.")
+
+total_eei_MJ = grid_m["total_eei_MJ"].sum()
+total_eci_kg = grid_m["total_eci_kg"].sum()
 
 print("\n===== Texas Totals =====")
 print(f"Total embodied energy: {total_eei_MJ:,.2e} MJ")
@@ -83,7 +105,8 @@ eci_vmin = grid["eci_interp"].quantile(0.02)
 eci_vmax = grid["eci_interp"].quantile(0.98)
 
 #EEI
-fig, ax = plt.subplots(figsize=(12, 12))
+fig, ax = plt.subplots(figsize=(12, 12), facecolor="white")
+ax.set_facecolor("white") 
 
 plot = grid.plot(
     ax=ax,
@@ -99,11 +122,19 @@ plot = grid.plot(
     }
 )
 
-cbar = plot.get_figure().axes[-1]
-cbar.tick_params(labelsize=12)
-cbar.set_ylabel("MJ/m²", fontsize=14)
+cbar = fig.axes[-1]
+for tick in cbar.get_yticklabels():
+    tick.set_visible(True)
+    tick.set_color("black")
+    tick.set_fontsize(16)
 
-ax.set_title("Texas Embodied Energy Intensity (EEI)", fontsize=16)
+cbar.tick_params(colors="black")
+cbar.set_ylabel("MJ/m²", fontsize=18, color="black")
+cbar.yaxis.get_offset_text().set_color("black")
+for spine in cbar.spines.values():
+    spine.set_edgecolor("black")
+
+ax.set_title("Texas Embodied Energy Intensity (EEI)", fontsize=22, color="black")
 ax.set_axis_off()
 
 plt.tight_layout()
@@ -111,7 +142,8 @@ plt.savefig("texas_eei_map.png", dpi=300, bbox_inches="tight")
 plt.show()
 
 #ECI
-fig, ax = plt.subplots(figsize=(12, 12))
+fig, ax = plt.subplots(figsize=(12, 12), facecolor="white")
+ax.set_facecolor("white") 
 grid.plot(
     ax=ax,
     column="eci_interp",
@@ -125,7 +157,20 @@ grid.plot(
         "shrink": 0.7
     }
 )
-ax.set_title("Texas Embodied Carbon Intensity (ECI)", fontsize=16)
+
+cbar = fig.axes[-1]
+for tick in cbar.get_yticklabels():
+    tick.set_visible(True)
+    tick.set_color("black")
+    tick.set_fontsize(16)
+
+cbar.tick_params(colors="black")
+cbar.set_ylabel("kgCO₂e/m²", fontsize=18, color="black")
+cbar.yaxis.get_offset_text().set_color("black")
+for spine in cbar.spines.values():
+    spine.set_edgecolor("black")
+
+ax.set_title("Texas Embodied Carbon Intensity (ECI)", fontsize=22, color="black")
 ax.set_axis_off()
 plt.tight_layout()
 plt.savefig("texas_eci_map.png", dpi=300, bbox_inches="tight")
