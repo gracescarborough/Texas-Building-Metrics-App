@@ -138,6 +138,12 @@ if page == "Main Map":
     hex_data['normalized'] = hex_data['normalized'].clip(0, 1)
     hex_data['elevation'] = hex_data['normalized'] * 100000 if enable_3d else 0
 
+    hex_data['display_value_scaled'] = (hex_data['avg_value'] * 10).round(3)
+    if 'fp_dens' in hex_data.columns:
+        hex_data['footprint_display_scaled'] = (hex_data['fp_dens'] * 10).round(3)
+    else:
+        hex_data['footprint_display_scaled'] = 'N/A'
+
     def get_color(normalized, color_scheme):
         if color_scheme == "YlOrRd":
             r = int(255)
@@ -162,11 +168,12 @@ if page == "Main Map":
     )
 
     if metric == "Building Density":
-        tooltip_html = (
-            "<b>Building Density</b><br>"
-            "Total Floor Density: {display_value}<br>"
-            "Footprint Density: {footprint_display}"
-        )
+        if metric == "Building Density":
+            tooltip_html = (
+                "<b>Building Density</b><br>"
+                "Total Floor Density: {display_value_scaled}<br>"
+                "Footprint Density: {footprint_display_scaled}"
+            )
     elif metric == "Embodied Energy Intensity (EEI)":
         tooltip_html = "<b>Average Embodied Energy Intensity</b><br>{display_value} MJ/m²"
     elif metric == "Embodied Carbon Intensity (ECI)":
