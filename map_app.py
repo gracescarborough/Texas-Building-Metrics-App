@@ -138,9 +138,9 @@ if page == "Main Map":
     hex_data['normalized'] = hex_data['normalized'].clip(0, 1)
     hex_data['elevation'] = hex_data['normalized'] * 100000 if enable_3d else 0
 
-    hex_data['display_value_scaled'] = (hex_data['avg_value'] * 10).round(3)
+    hex_data['display_value_scaled'] = (hex_data['avg_value'] * 100).round(3)
     if 'fp_dens' in hex_data.columns:
-        hex_data['footprint_display_scaled'] = (hex_data['fp_dens'] * 10).round(3)
+        hex_data['footprint_display_scaled'] = (hex_data['fp_dens'] * 100).round(3)
     else:
         hex_data['footprint_display_scaled'] = 'N/A'
 
