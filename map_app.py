@@ -8,7 +8,7 @@ from pathlib import Path
 import h3
 import os
 
-st.set_page_config(layout="wide", page_title="Texas Energy and Emissions Model")
+st.set_page_config(layout="wide", page_title="Texas Buildings' Energy and Emissions Model")
 page = st.sidebar.radio(
     "Select Page",
     ["Main Map", "Future Building Development", "About"]
@@ -206,7 +206,7 @@ if page == "Main Map":
         tooltip=tooltip
     )
 
-    st.title("Texas Energy and Emissions Model")
+    st.title("Texas Buildings' Energy and Emissions Model")
     st.markdown("<p style='text-align: right; color: #999; font-size: 11px; margin-top: -15px;'>By Grace Scarborough | 2026</p>", unsafe_allow_html=True)
     st.markdown(f"**Currently displaying:** {metric}")
 
@@ -241,7 +241,7 @@ if page == "Main Map":
         )
 
 elif page == "About":
-    st.title("About The Texas Energy and Emissions Model")
+    st.title("About The Texas Buildings' Energy and Emissions Model")
     st.markdown("""
     The goal of this app is to use building density, size, and usage data to estimate the embodied energy and embodied carbon of all buildings across Texas. These estimates are intended to provide insight into how urban development, such as dense city centers versus sprawling development, affects overall energy consumption and carbon emissions. 
     This app visualizes building metrics across Texas using hexagon aggregation. 
