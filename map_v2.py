@@ -56,11 +56,29 @@ buildings["floor_area_m2"] = buildings["footprint_m2"] * buildings["Est_floors"]
 floors = buildings["Est_floors"].astype(int)
 btype  = buildings["btype"]
 
+print("\nTop 30 tallest buildings:")
+
+# If "height" exists use it, otherwise fall back to floors
+height_col = "height" if "height" in buildings.columns else "Est_floors"
+
+# Convert to lat/lon (WGS84)
+buildings_latlon = buildings.to_crs("EPSG:4326")
+
+top10 = buildings_latlon.nlargest(30, height_col)
+
+print(
+    top10[[height_col, "btype", "geometry"]]
+    .assign(
+        latitude=top10.geometry.y,
+        longitude=top10.geometry.x
+    )[["btype", height_col, "latitude", "longitude"]]
+)
+
 buildings["EEI"] = np.select(
     [
         (btype == "Industrial") | (btype == "Agricultural"),
-        ((btype == "Commercial") | (btype == "Institutional")) & (floors <= 6),
-        ((btype == "Commercial") | (btype == "Institutional")) & (floors > 6),
+        ((btype == "Commercial") | (btype == "Public")) & (floors <= 6),
+        ((btype == "Commercial") | (btype == "Public")) & (floors > 6),
         (btype == "Residential") & (floors == 1),
         (btype == "Residential") & (floors == 2),
         (btype == "Residential") & (floors >= 3),
@@ -79,8 +97,8 @@ buildings["EEI"] = np.select(
 buildings["ECI"] = np.select(
     [
         (btype == "Industrial") | (btype == "Agricultural"),
-        ((btype == "Commercial") | (btype == "Institutional")) & (floors <= 6),
-        ((btype == "Commercial") | (btype == "Institutional")) & (floors > 6),
+        ((btype == "Commercial") | (btype == "Public")) & (floors <= 6),
+        ((btype == "Commercial") | (btype == "Public")) & (floors > 6),
         btype == "Residential",
     ],
     [
@@ -96,6 +114,8 @@ buildings["ec_kgco2"] = buildings["floor_area_m2"] * buildings["ECI"]
 
 buildings["fp_x_floors"] = buildings["footprint_m2"] * buildings["Est_floors"]
 
+buildings["is_residential"] = buildings["btype"] == "Residential"
+
 print("Aggregating to grid cells...")
 grp = buildings.groupby("cell_id")
 
@@ -103,6 +123,7 @@ agg = grp.agg(
     building_count   = ("footprint_m2",  "count"),
     total_footprint  = ("footprint_m2",  "sum"),
     total_floor_area = ("floor_area_m2", "sum"),
+    res_floor_area   = ("floor_area_m2", lambda x: x[buildings.loc[x.index, "is_residential"]].sum()),
     fp_x_floors_sum  = ("fp_x_floors",   "sum"),
     total_ee_mj      = ("ee_mj",         "sum"),
     total_ec_kgco2e  = ("ec_kgco2",      "sum"),
@@ -132,6 +153,7 @@ centroids_gdf = gpd.GeoDataFrame(
         "flr_dens":          agg["flr_dens"].values,
         "fp_area":           agg["total_footprint"].values,
         "fp_dens":           agg["fp_dens"].values,
+        "res_flr_area": agg["res_floor_area"].values,
         "avg_floors":        agg["avg_floors"].values,
         "total_ee_mj":       agg["total_ee_mj"].values,
         "total_ec_kgco2e":   agg["total_ec_kgco2e"].values,

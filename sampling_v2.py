@@ -30,7 +30,7 @@ height_data = {}
 for btype, fname in [
     ("Residential",   "TX_residential_heights2.csv"),
     ("Commercial",    "TX_commercial_heights2.csv"),
-    ("Institutional", "TX_public_heights2.csv"),
+    ("Public", "TX_public_heights2.csv"),
 ]:
     path = os.path.join(HEIGHTS_DIR, fname)
     df = pd.read_csv(path)[["footprint_m2", "Est_floors", "is_urban"]].dropna()
@@ -51,15 +51,26 @@ def sample_floors(btype, footprint_area_m2, is_urban=False, n_bins=5):
     pool = df[df["is_urban"] == is_urban]
     if len(pool) < 10:
         pool = df
+    neighbors = pd.DataFrame()
+
     for n in [n_bins, 3, 1]:
         bins = pd.qcut(pool["footprint_m2"], q=n, duplicates="drop", retbins=True)[1]
-        bin_idx = np.clip(np.searchsorted(bins, footprint_area_m2, side="right") - 1, 0, len(bins) - 2)
+        
+        bin_idx = np.clip(
+            np.searchsorted(bins, footprint_area_m2, side="right") - 1,
+            0,
+            len(bins) - 2
+        )
+        
         lo, hi = bins[bin_idx], bins[bin_idx + 1]
+
         neighbors = pool[(pool["footprint_m2"] >= lo) & (pool["footprint_m2"] <= hi)]
+
         if len(neighbors) >= 5:
             break
-    if len(neighbors) == 0:
-        neighbors = pool
+
+    if len(neighbors) < 5:
+        neighbors = pool.sample(min(50, len(pool)), random_state=42)
     return max(1, min(int(rng.choice(neighbors["Est_floors"].values)), 70))
 
 
@@ -92,7 +103,7 @@ for gdb_file in tqdm(all_gdb_files, desc="Processing GDB files"):
                 "Residential":      "Residential",
                 "Commercial":       "Commercial",
                 "Industrial":       "Industrial",
-                "Public":           "Institutional",
+                "Public":           "Public",
                 "Agricultural":     "Agricultural",
                 "Vacant or Unknown": "Other",
             }
